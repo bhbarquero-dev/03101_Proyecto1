@@ -1,3 +1,11 @@
 <Solution>
+  <Folder Name="/Database/">
+    <File Path="Database/00_crear_bd.sql" />
+    <File Path="Database/01_EstadosTicket.sql" />
+    <File Path="Database/02_Usuarios.sql" />
+    <File Path="Database/03_Tickets.sql" />
+    <File Path="Database/04_Comentarios.sql" />
+    <File Path="Database/05_datos_semilla.sql" />
+  </Folder>
   <Project Path="HelpDesk/HelpDesk.csproj" Id="f7783bdb-3f2b-4cbd-82b2-12a3cb1b69d8" />
 </Solution>
