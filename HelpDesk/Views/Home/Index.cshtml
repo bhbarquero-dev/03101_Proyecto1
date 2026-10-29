@@ -6,4 +6,5 @@
 <main class="mt-4">
     <h1 class="h3">Bienvenido, @sesion.Nombre</h1>
     <p class="lead">Sistema de gestión de solicitudes de soporte técnico.</p>
+    @Html.ActionLink("Ver mis tickets", "MisTickets", "Tickets", null, new { @class = "btn btn-primary" })
 </main>

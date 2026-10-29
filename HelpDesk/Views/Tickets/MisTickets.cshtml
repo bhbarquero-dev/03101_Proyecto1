@@ -1,0 +1,70 @@
+﻿@model IList<HelpDesk.Models.Ticket>
+@using HelpDesk.Models
+@{
+    ViewBag.Title = "Mis tickets";
+}
+
+@functions {
+    // Color del badge segun el estado del ticket
+    string ClaseEstado(int idEstado)
+    {
+        switch (idEstado)
+        {
+            case EstadoTicket.Abierto: return "bg-primary";
+            case EstadoTicket.EnProceso: return "bg-warning text-dark";
+            case EstadoTicket.Resuelto: return "bg-success";
+            default: return "bg-secondary";
+        }
+    }
+}
+
+<main class="mt-4">
+    <h1 class="h3 mb-3">Mis tickets</h1>
+
+    @if (Model.Count == 0)
+    {
+        <div class="alert alert-info">Todavía no ha registrado ningún ticket.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col">N.º</th>
+                        <th scope="col">Título</th>
+                        <th scope="col">Categoría</th>
+                        <th scope="col">Estado</th>
+                        <th scope="col">Asignado a</th>
+                        <th scope="col">Creado</th>
+                        <th scope="col">Actualizado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var ticket in Model)
+                    {
+                        <tr>
+                            <td>@ticket.Id</td>
+                            <td>@ticket.Titulo</td>
+                            <td>@ticket.Categoria</td>
+                            <td><span class="badge @ClaseEstado(ticket.IdEstado)">@ticket.Estado.Nombre</span></td>
+                            <td>
+                                @if (ticket.Asignado != null)
+                                {
+                                    @ticket.Asignado.Nombre
+                                }
+                                else
+                                {
+                                    <span class="text-muted fst-italic">Sin asignar</span>
+                                }
+                            </td>
+                            <td class="text-nowrap">@ticket.FechaCreacion.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td class="text-nowrap">@ticket.FechaActualizacion.ToString("dd/MM/yyyy HH:mm")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <p class="text-muted small">Total: @Model.Count ticket(s).</p>
+    }
+</main>
