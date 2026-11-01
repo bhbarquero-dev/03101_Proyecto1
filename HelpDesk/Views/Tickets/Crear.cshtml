@@ -1,0 +1,47 @@
+﻿@model HelpDesk.Models.CrearTicketViewModel
+@{
+    ViewBag.Title = "Nuevo ticket";
+}
+
+<main class="row justify-content-center mt-4">
+    <div class="col-12 col-md-10 col-lg-8">
+        <h1 class="h3 mb-3">Nuevo ticket</h1>
+
+        @using (Html.BeginForm("Crear", "Tickets", FormMethod.Post, new { id = "form-ticket", novalidate = "novalidate" }))
+        {
+            @Html.AntiForgeryToken()
+
+            <div class="mb-3">
+                @Html.LabelFor(m => m.Titulo, new { @class = "form-label" })
+                @Html.TextBoxFor(m => m.Titulo, new { @class = "form-control mw-100", maxlength = "150", autofocus = "autofocus" })
+                @Html.ValidationMessageFor(m => m.Titulo, "", new { @class = "text-danger small" })
+            </div>
+
+            <div class="mb-3">
+                @Html.LabelFor(m => m.Categoria, new { @class = "form-label" })
+                @Html.DropDownListFor(m => m.Categoria, new SelectList(HelpDesk.Models.CrearTicketViewModel.Categorias), "Seleccione una categoría", new { @class = "form-select mw-100" })
+                @Html.ValidationMessageFor(m => m.Categoria, "", new { @class = "text-danger small" })
+            </div>
+
+            <div class="mb-4">
+                @Html.LabelFor(m => m.Descripcion, new { @class = "form-label" })
+                @Html.TextAreaFor(m => m.Descripcion, new { @class = "form-control mw-100", rows = "6" })
+                @Html.ValidationMessageFor(m => m.Descripcion, "", new { @class = "text-danger small" })
+            </div>
+
+            <button type="submit" id="btn-ticket" class="btn btn-primary">Registrar ticket</button>
+            @Html.ActionLink("Cancelar", "MisTickets", "Tickets", null, new { @class = "btn btn-outline-secondary ms-2" })
+        }
+    </div>
+</main>
+
+@section scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+    <script>
+        // Evita que el formulario se envie dos veces y se dupliquen tickets
+        $('#form-ticket').on('submit', function () {
+            if ($.fn.valid && !$(this).valid()) return;
+            $('#btn-ticket').prop('disabled', true);
+        });
+    </script>
+}
