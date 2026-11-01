@@ -135,6 +135,7 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Models\Comentario.cs" />
+    <Compile Include="Models\CrearTicketViewModel.cs" />
     <Compile Include="Models\EstadoTicket.cs" />
     <Compile Include="Models\LoginViewModel.cs" />
     <Compile Include="Models\Ticket.cs" />
@@ -195,6 +196,7 @@
     <Content Include="Views\Home\Contact.cshtml" />
     <Content Include="Views\Home\Index.cshtml" />
     <Content Include="Views\Cuenta\Login.cshtml" />
+    <Content Include="Views\Tickets\Crear.cshtml" />
     <Content Include="Views\Tickets\MisTickets.cshtml" />
   </ItemGroup>
   <ItemGroup>
