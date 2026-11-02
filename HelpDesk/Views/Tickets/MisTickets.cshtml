@@ -1,21 +1,6 @@
 ﻿@model IList<HelpDesk.Models.Ticket>
-@using HelpDesk.Models
 @{
     ViewBag.Title = "Mis tickets";
-}
-
-@functions {
-    // Color del badge segun el estado del ticket
-    string ClaseEstado(int idEstado)
-    {
-        switch (idEstado)
-        {
-            case EstadoTicket.Abierto: return "bg-primary";
-            case EstadoTicket.EnProceso: return "bg-warning text-dark";
-            case EstadoTicket.Resuelto: return "bg-success";
-            default: return "bg-secondary";
-        }
-    }
 }
 
 <main class="mt-4">
@@ -53,9 +38,9 @@
                     {
                         <tr>
                             <td>@ticket.Id</td>
-                            <td>@ticket.Titulo</td>
+                            <td>@Html.ActionLink(ticket.Titulo, "Detalle", "Tickets", new { id = ticket.Id }, null)</td>
                             <td>@ticket.Categoria</td>
-                            <td><span class="badge @ClaseEstado(ticket.IdEstado)">@ticket.Estado.Nombre</span></td>
+                            <td>@Html.Partial("_EstadoBadge", ticket)</td>
                             <td>
                                 @if (ticket.Asignado != null)
                                 {

@@ -1,0 +1,18 @@
+@model HelpDesk.Models.Ticket
+@using HelpDesk.Models
+
+@functions {
+    // Color del badge segun el estado del ticket
+    string ClaseEstado(int idEstado)
+    {
+        switch (idEstado)
+        {
+            case EstadoTicket.Abierto: return "bg-primary";
+            case EstadoTicket.EnProceso: return "bg-warning text-dark";
+            case EstadoTicket.Resuelto: return "bg-success";
+            default: return "bg-secondary";
+        }
+    }
+}
+
+<span class="badge @ClaseEstado(Model.IdEstado)">@Model.Estado.Nombre</span>

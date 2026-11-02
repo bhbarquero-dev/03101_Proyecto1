@@ -1,4 +1,10 @@
-﻿/* Set padding to keep content from hitting the edges */
+﻿/* Texto escrito por el usuario: respeta saltos de linea y parte palabras muy largas */
+.texto-libre {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+/* Set padding to keep content from hitting the edges */
 .body-content {
     margin-top: 15px;
     padding-left: 15px;
