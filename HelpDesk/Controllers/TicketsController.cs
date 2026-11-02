@@ -1,3 +1,4 @@
+using System;
 using System.Data.Entity;
 using System.Linq;
 using System.Web.Mvc;
@@ -9,6 +10,8 @@ namespace HelpDesk.Controllers
 {
     public class TicketsController : Controller
     {
+        private const string TicketNoEncontrado = "El ticket no existe o no tiene acceso a él.";
+
         // GET: /Tickets/MisTickets (HU-02)
         public ActionResult MisTickets()
         {
@@ -64,6 +67,101 @@ namespace HelpDesk.Controllers
             // Redirige para que recargar la pagina no registre el ticket otra vez
             TempData["Mensaje"] = "El ticket N.º " + ticket.Id + " se registró correctamente.";
             return RedirectToAction("MisTickets");
+        }
+
+        // GET: /Tickets/Detalle/5
+        public ActionResult Detalle(int id = 0)
+        {
+            using (var db = new HelpDeskContext())
+            {
+                var ticket = TicketsVisibles(db)
+                    .AsNoTracking()
+                    .Include(t => t.Estado)
+                    .Include(t => t.Solicitante)
+                    .Include(t => t.Asignado)
+                    .SingleOrDefault(t => t.Id == id);
+
+                if (ticket == null) return HttpNotFound();
+                return View(ticket);
+            }
+        }
+
+        // GET: /Tickets/Comentarios/5 (AJAX)
+        public ActionResult Comentarios(int id = 0)
+        {
+            using (var db = new HelpDeskContext())
+            {
+                if (!TicketsVisibles(db).Any(t => t.Id == id)) return ErrorJson(404, TicketNoEncontrado);
+
+                var comentarios = db.Comentarios
+                    .Where(c => c.IdTicket == id)
+                    .OrderBy(c => c.Fecha).ThenBy(c => c.Id)
+                    .Select(c => new { Autor = c.Usuario.Nombre, c.Fecha, c.Texto })
+                    .ToList()
+                    .Select(c => new { autor = c.Autor, fecha = FormatoFecha(c.Fecha), texto = c.Texto });
+
+                return Json(new { comentarios }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        // POST: /Tickets/AgregarComentario/5 (AJAX, HU-03)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult AgregarComentario(ComentarioViewModel modelo, int id = 0)
+        {
+            var sesion = SesionUsuario.Obtener(User);
+
+            using (var db = new HelpDeskContext())
+            {
+                var ticket = TicketsVisibles(db).SingleOrDefault(t => t.Id == id);
+                if (ticket == null) return ErrorJson(404, TicketNoEncontrado);
+
+                if (!ModelState.IsValid)
+                {
+                    string error = ModelState.Values.SelectMany(v => v.Errors).First().ErrorMessage;
+                    return ErrorJson(400, error);
+                }
+
+                var comentario = new Comentario
+                {
+                    IdTicket = ticket.Id,
+                    IdUsuario = sesion.Id,
+                    Texto = modelo.Texto.Trim()
+                };
+                db.Comentarios.Add(comentario);
+                ticket.FechaActualizacion = comentario.Fecha;
+                db.SaveChanges();
+
+                return Json(new
+                {
+                    autor = sesion.Nombre,
+                    fecha = FormatoFecha(comentario.Fecha),
+                    texto = comentario.Texto
+                });
+            }
+        }
+
+        // Un Usuario solo ve los tickets que solicito; un Administrador ve todos.
+        // Un ticket ajeno se trata igual que uno inexistente, para no revelar que existe.
+        private IQueryable<Ticket> TicketsVisibles(HelpDeskContext db)
+        {
+            var sesion = SesionUsuario.Obtener(User);
+            if (sesion.EsAdministrador) return db.Tickets;
+
+            int idUsuario = sesion.Id;
+            return db.Tickets.Where(t => t.IdUsuarioSolicitante == idUsuario);
+        }
+
+        private JsonResult ErrorJson(int estado, string mensaje)
+        {
+            Response.StatusCode = estado;
+            Response.TrySkipIisCustomErrors = true;
+            return Json(new { error = mensaje }, JsonRequestBehavior.AllowGet);
+        }
+
+        private static string FormatoFecha(DateTime fecha)
+        {
+            return fecha.ToString("dd/MM/yyyy HH:mm");
         }
     }
 }

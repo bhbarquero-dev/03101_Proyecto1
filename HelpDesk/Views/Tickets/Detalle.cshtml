@@ -1,0 +1,123 @@
+﻿@model HelpDesk.Models.Ticket
+@{
+    ViewBag.Title = "Ticket N.º " + Model.Id;
+}
+
+<main class="mt-4">
+    <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+        <div>
+            <p class="text-muted mb-1">Ticket N.º @Model.Id</p>
+            <h1 class="h3 mb-0 texto-libre">@Model.Titulo</h1>
+        </div>
+        @Html.ActionLink("Volver a mis tickets", "MisTickets", "Tickets", null, new { @class = "btn btn-outline-secondary text-nowrap" })
+    </div>
+
+    <dl class="row mb-4">
+        <dt class="col-sm-3">Estado</dt>
+        <dd class="col-sm-9">@Html.Partial("_EstadoBadge", Model)</dd>
+
+        <dt class="col-sm-3">Categoría</dt>
+        <dd class="col-sm-9">@Model.Categoria</dd>
+
+        <dt class="col-sm-3">Solicitante</dt>
+        <dd class="col-sm-9">@Model.Solicitante.Nombre</dd>
+
+        <dt class="col-sm-3">Asignado a</dt>
+        <dd class="col-sm-9">
+            @if (Model.Asignado != null)
+            {
+                @Model.Asignado.Nombre
+            }
+            else
+            {
+                <span class="text-muted fst-italic">Sin asignar</span>
+            }
+        </dd>
+
+        <dt class="col-sm-3">Creado</dt>
+        <dd class="col-sm-9">@Model.FechaCreacion.ToString("dd/MM/yyyy HH:mm")</dd>
+
+        <dt class="col-sm-3">Actualizado</dt>
+        <dd class="col-sm-9" id="fecha-actualizacion">@Model.FechaActualizacion.ToString("dd/MM/yyyy HH:mm")</dd>
+
+        <dt class="col-sm-3">Descripción</dt>
+        <dd class="col-sm-9 texto-libre">@Model.Descripcion</dd>
+    </dl>
+
+    <h2 class="h5">Comentarios</h2>
+    <p id="estado-comentarios" class="text-muted" role="status">Cargando comentarios…</p>
+    <ul id="lista-comentarios" class="list-group mb-3"></ul>
+
+    @using (Html.BeginForm("AgregarComentario", "Tickets", new { id = Model.Id }, FormMethod.Post, new { id = "form-comentario" }))
+    {
+        @Html.AntiForgeryToken()
+
+        <div class="mb-2">
+            <label for="Texto" class="form-label">Agregar un comentario</label>
+            <textarea id="Texto" name="Texto" class="form-control mw-100" rows="3" maxlength="1000"></textarea>
+            <div id="error-comentario" class="text-danger small" role="alert"></div>
+        </div>
+        <button type="submit" id="btn-comentario" class="btn btn-primary">Enviar comentario</button>
+    }
+</main>
+
+@section scripts {
+    <script>
+        $(function () {
+            var $lista = $('#lista-comentarios');
+            var $estado = $('#estado-comentarios');
+            var $error = $('#error-comentario');
+            var $form = $('#form-comentario');
+            var $boton = $('#btn-comentario');
+            var $texto = $('#Texto');
+
+            // .text() inserta el contenido como texto, nunca como HTML
+            function agregarALista(comentario) {
+                var $encabezado = $('<div class="small text-muted mb-1"></div>')
+                    .text(comentario.autor + ' · ' + comentario.fecha);
+                var $cuerpo = $('<div class="texto-libre"></div>').text(comentario.texto);
+                $('<li class="list-group-item"></li>').append($encabezado, $cuerpo).appendTo($lista);
+            }
+
+            $.getJSON('@Url.Action("Comentarios", "Tickets", new { id = Model.Id })')
+                .done(function (respuesta) {
+                    $.each(respuesta.comentarios, function (i, comentario) { agregarALista(comentario); });
+                    if (respuesta.comentarios.length === 0) {
+                        $estado.text('Todavía no hay comentarios.');
+                    } else {
+                        $estado.addClass('d-none');
+                    }
+                })
+                .fail(function () {
+                    $estado.text('No se pudieron cargar los comentarios. Recargue la página.');
+                });
+
+            $form.on('submit', function (e) {
+                e.preventDefault();
+                $error.text('');
+
+                if ($.trim($texto.val()) === '') {
+                    $error.text('Escriba el comentario.');
+                    return;
+                }
+
+                $boton.prop('disabled', true);
+                // serialize() incluye el token antifalsificacion del formulario
+                $.ajax({ url: $form.attr('action'), method: 'POST', data: $form.serialize(), dataType: 'json' })
+                    .done(function (comentario) {
+                        agregarALista(comentario);
+                        $estado.addClass('d-none');
+                        $('#fecha-actualizacion').text(comentario.fecha);
+                        $texto.val('').trigger('focus');
+                    })
+                    .fail(function (xhr) {
+                        var respuesta = xhr.responseJSON;
+                        $error.text(respuesta && respuesta.error ? respuesta.error : 'No se pudo enviar el comentario. Intente de nuevo.');
+                    })
+                    .always(function () {
+                        $boton.prop('disabled', false);
+                    });
+            });
+        });
+    </script>
+}
