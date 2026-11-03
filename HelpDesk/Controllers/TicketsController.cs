@@ -32,6 +32,25 @@ namespace HelpDesk.Controllers
             }
         }
 
+        // GET: /Tickets/Todos (solo Administrador)
+        public ActionResult Todos()
+        {
+            if (!SesionUsuario.Obtener(User).EsAdministrador) return new HttpStatusCodeResult(403);
+
+            using (var db = new HelpDeskContext())
+            {
+                var tickets = db.Tickets
+                    .AsNoTracking()
+                    .Include(t => t.Estado)
+                    .Include(t => t.Solicitante)
+                    .Include(t => t.Asignado)
+                    .OrderByDescending(t => t.FechaCreacion)
+                    .ToList();
+
+                return View(tickets);
+            }
+        }
+
         // GET: /Tickets/Crear (HU-01)
         public ActionResult Crear()
         {

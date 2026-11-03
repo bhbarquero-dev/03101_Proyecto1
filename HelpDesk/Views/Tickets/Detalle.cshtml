@@ -9,7 +9,14 @@
             <p class="text-muted mb-1">Ticket N.º @Model.Id</p>
             <h1 class="h3 mb-0 texto-libre">@Model.Titulo</h1>
         </div>
-        @Html.ActionLink("Volver a mis tickets", "MisTickets", "Tickets", null, new { @class = "btn btn-outline-secondary text-nowrap" })
+        @if (HelpDesk.Seguridad.SesionUsuario.Obtener(User).EsAdministrador)
+        {
+            @Html.ActionLink("Volver a todos los tickets", "Todos", "Tickets", null, new { @class = "btn btn-outline-secondary text-nowrap" })
+        }
+        else
+        {
+            @Html.ActionLink("Volver a mis tickets", "MisTickets", "Tickets", null, new { @class = "btn btn-outline-secondary text-nowrap" })
+        }
     </div>
 
     <dl class="row mb-4">

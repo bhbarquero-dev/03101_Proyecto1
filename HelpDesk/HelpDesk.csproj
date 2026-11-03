@@ -201,6 +201,7 @@
     <Content Include="Views\Tickets\Detalle.cshtml" />
     <Content Include="Views\Tickets\_EstadoBadge.cshtml" />
     <Content Include="Views\Tickets\MisTickets.cshtml" />
+    <Content Include="Views\Tickets\Todos.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
