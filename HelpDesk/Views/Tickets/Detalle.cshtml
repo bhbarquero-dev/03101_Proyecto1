@@ -21,7 +21,7 @@
 
     <dl class="row mb-4">
         <dt class="col-sm-3">Estado</dt>
-        <dd class="col-sm-9">@Html.Partial("_EstadoBadge", Model)</dd>
+        <dd class="col-sm-9" id="estado-ticket">@Html.Partial("_EstadoBadge", Model)</dd>
 
         <dt class="col-sm-3">Categoría</dt>
         <dd class="col-sm-9">@Model.Categoria</dd>
@@ -50,6 +50,19 @@
         <dt class="col-sm-3">Descripción</dt>
         <dd class="col-sm-9 texto-libre">@Model.Descripcion</dd>
     </dl>
+
+    @if (ViewBag.Estados != null)
+    {
+        <h2 class="h5">Cambiar estado</h2>
+        using (Html.BeginForm("CambiarEstado", "Tickets", new { id = Model.Id }, FormMethod.Post, new { id = "form-estado", @class = "d-flex flex-wrap align-items-center gap-2 mb-1" }))
+        {
+            @Html.AntiForgeryToken()
+            <label for="idEstado" class="visually-hidden">Nuevo estado</label>
+            @Html.DropDownList("idEstado", (SelectList)ViewBag.Estados, new { @class = "form-select w-auto" })
+            <button type="submit" id="btn-estado" class="btn btn-primary">Cambiar estado</button>
+        }
+        <div id="mensaje-estado" class="small mb-4" role="status"></div>
+    }
 
     <h2 class="h5">Comentarios</h2>
     <p id="estado-comentarios" class="text-muted" role="status">Cargando comentarios…</p>
@@ -123,6 +136,36 @@
                     })
                     .always(function () {
                         $boton.prop('disabled', false);
+                    });
+            });
+
+            // Cambio de estado (solo existe el formulario si la sesion es de un Administrador)
+            var $formEstado = $('#form-estado');
+            var $selectEstado = $('#idEstado');
+            var $mensajeEstado = $('#mensaje-estado');
+            var estadoActual = $selectEstado.val();
+
+            $formEstado.on('submit', function (e) {
+                e.preventDefault();
+                $mensajeEstado.removeClass('text-danger text-success').text('');
+                $('#btn-estado').prop('disabled', true);
+
+                $.ajax({ url: $formEstado.attr('action'), method: 'POST', data: $formEstado.serialize(), dataType: 'json' })
+                    .done(function (respuesta) {
+                        estadoActual = $selectEstado.val();
+                        $('#estado-ticket .badge').attr('class', 'badge ' + respuesta.clase).text(respuesta.estado);
+                        $('#fecha-actualizacion').text(respuesta.fecha);
+                        $mensajeEstado.addClass('text-success').text(respuesta.cambio
+                            ? 'Estado actualizado a «' + respuesta.estado + '».'
+                            : 'El ticket ya estaba en «' + respuesta.estado + '».');
+                    })
+                    .fail(function (xhr) {
+                        var respuesta = xhr.responseJSON;
+                        $selectEstado.val(estadoActual);
+                        $mensajeEstado.addClass('text-danger').text(respuesta && respuesta.error ? respuesta.error : 'No se pudo cambiar el estado. Intente de nuevo.');
+                    })
+                    .always(function () {
+                        $('#btn-estado').prop('disabled', false);
                     });
             });
         });

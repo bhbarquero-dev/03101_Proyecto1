@@ -33,10 +33,9 @@ namespace HelpDesk.Controllers
         }
 
         // GET: /Tickets/Todos (solo Administrador)
+        [AutorizarAdministrador]
         public ActionResult Todos()
         {
-            if (!SesionUsuario.Obtener(User).EsAdministrador) return new HttpStatusCodeResult(403);
-
             using (var db = new HelpDeskContext())
             {
                 var tickets = db.Tickets
@@ -101,7 +100,46 @@ namespace HelpDesk.Controllers
                     .SingleOrDefault(t => t.Id == id);
 
                 if (ticket == null) return HttpNotFound();
+
+                // Solo el Administrador ve el control para cambiar el estado
+                if (SesionUsuario.Obtener(User).EsAdministrador)
+                {
+                    ViewBag.Estados = new SelectList(db.EstadosTicket.OrderBy(e => e.Id).ToList(), "Id", "Nombre", ticket.IdEstado);
+                }
                 return View(ticket);
+            }
+        }
+
+        // POST: /Tickets/CambiarEstado/5 (AJAX, HU-05)
+        [HttpPost]
+        [AutorizarAdministrador]
+        [ValidateAntiForgeryToken]
+        public ActionResult CambiarEstado(int id = 0, int idEstado = 0)
+        {
+            using (var db = new HelpDeskContext())
+            {
+                var ticket = db.Tickets.SingleOrDefault(t => t.Id == id);
+                if (ticket == null) return ErrorJson(404, TicketNoEncontrado);
+
+                var estado = db.EstadosTicket.SingleOrDefault(e => e.Id == idEstado);
+                if (estado == null) return ErrorJson(400, "El estado seleccionado no existe.");
+
+                // Elegir el mismo estado no es un cambio: no se guarda ni se actualiza la fecha
+                bool cambio = ticket.IdEstado != estado.Id;
+                if (cambio)
+                {
+                    ticket.IdEstado = estado.Id;
+                    ticket.FechaActualizacion = DateTime.Now;
+                    db.SaveChanges();
+                }
+
+                return Json(new
+                {
+                    cambio,
+                    estado = estado.Nombre,
+                    clase = EstadoTicket.ClaseBadge(estado.Id),
+                    fecha = FormatoFecha(ticket.FechaActualizacion)
+                });
             }
         }
 

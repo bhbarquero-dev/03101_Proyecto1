@@ -142,6 +142,7 @@
     <Compile Include="Models\Ticket.cs" />
     <Compile Include="Models\Usuario.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Seguridad\AutorizarAdministradorAttribute.cs" />
     <Compile Include="Seguridad\PasswordHasher.cs" />
     <Compile Include="Seguridad\SesionUsuario.cs" />
   </ItemGroup>
