@@ -14,6 +14,18 @@ namespace HelpDesk.Models
         public const int Resuelto = 3;
         public const int Cerrado = 4;
 
+        // Clase de Bootstrap con la que las vistas muestran cada estado
+        public static string ClaseBadge(int idEstado)
+        {
+            switch (idEstado)
+            {
+                case Abierto: return "bg-primary";
+                case EnProceso: return "bg-warning text-dark";
+                case Resuelto: return "bg-success";
+                default: return "bg-secondary";
+            }
+        }
+
         public EstadoTicket()
         {
             Tickets = new HashSet<Ticket>();
