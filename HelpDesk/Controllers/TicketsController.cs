@@ -101,10 +101,11 @@ namespace HelpDesk.Controllers
 
                 if (ticket == null) return HttpNotFound();
 
-                // Solo el Administrador ve el control para cambiar el estado
+                // Solo el Administrador ve los controles para cambiar el estado y asignar el ticket
                 if (SesionUsuario.Obtener(User).EsAdministrador)
                 {
                     ViewBag.Estados = new SelectList(db.EstadosTicket.OrderBy(e => e.Id).ToList(), "Id", "Nombre", ticket.IdEstado);
+                    ViewBag.Administradores = new SelectList(AdministradoresActivos(db).OrderBy(u => u.Nombre).ToList(), "Id", "Nombre", ticket.IdUsuarioAsignado);
                 }
                 return View(ticket);
             }
@@ -138,6 +139,39 @@ namespace HelpDesk.Controllers
                     cambio,
                     estado = estado.Nombre,
                     clase = EstadoTicket.ClaseBadge(estado.Id),
+                    fecha = FormatoFecha(ticket.FechaActualizacion)
+                });
+            }
+        }
+
+        // POST: /Tickets/Asignar/5 (AJAX, HU-04)
+        [HttpPost]
+        [AutorizarAdministrador]
+        [ValidateAntiForgeryToken]
+        public ActionResult Asignar(int id = 0, int idUsuario = 0)
+        {
+            using (var db = new HelpDeskContext())
+            {
+                var ticket = db.Tickets.SingleOrDefault(t => t.Id == id);
+                if (ticket == null) return ErrorJson(404, TicketNoEncontrado);
+
+                // Solo se puede asignar a un Administrador activo
+                var administrador = AdministradoresActivos(db).SingleOrDefault(u => u.Id == idUsuario);
+                if (administrador == null) return ErrorJson(400, "Seleccione un administrador activo.");
+
+                // Asignar al mismo responsable no es un cambio: no se guarda ni se actualiza la fecha
+                bool cambio = ticket.IdUsuarioAsignado != administrador.Id;
+                if (cambio)
+                {
+                    ticket.IdUsuarioAsignado = administrador.Id;
+                    ticket.FechaActualizacion = DateTime.Now;
+                    db.SaveChanges();
+                }
+
+                return Json(new
+                {
+                    cambio,
+                    asignado = administrador.Nombre,
                     fecha = FormatoFecha(ticket.FechaActualizacion)
                 });
             }
@@ -207,6 +241,11 @@ namespace HelpDesk.Controllers
 
             int idUsuario = sesion.Id;
             return db.Tickets.Where(t => t.IdUsuarioSolicitante == idUsuario);
+        }
+
+        private static IQueryable<Usuario> AdministradoresActivos(HelpDeskContext db)
+        {
+            return db.Usuarios.Where(u => u.Rol == Usuario.RolAdministrador && u.Estado);
         }
 
         private JsonResult ErrorJson(int estado, string mensaje)

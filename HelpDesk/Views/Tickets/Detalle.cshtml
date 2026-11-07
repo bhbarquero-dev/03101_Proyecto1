@@ -30,7 +30,7 @@
         <dd class="col-sm-9">@Model.Solicitante.Nombre</dd>
 
         <dt class="col-sm-3">Asignado a</dt>
-        <dd class="col-sm-9">
+        <dd class="col-sm-9" id="asignado-ticket">
             @if (Model.Asignado != null)
             {
                 @Model.Asignado.Nombre
@@ -62,6 +62,19 @@
             <button type="submit" id="btn-estado" class="btn btn-primary">Cambiar estado</button>
         }
         <div id="mensaje-estado" class="small mb-4" role="status"></div>
+    }
+
+    @if (ViewBag.Administradores != null)
+    {
+        <h2 class="h5">Asignar ticket</h2>
+        using (Html.BeginForm("Asignar", "Tickets", new { id = Model.Id }, FormMethod.Post, new { id = "form-asignar", @class = "d-flex flex-wrap align-items-center gap-2 mb-1" }))
+        {
+            @Html.AntiForgeryToken()
+            <label for="idUsuario" class="visually-hidden">Administrador responsable</label>
+            @Html.DropDownList("idUsuario", (SelectList)ViewBag.Administradores, "Seleccione un administrador", new { @class = "form-select w-auto" })
+            <button type="submit" id="btn-asignar" class="btn btn-primary">Asignar</button>
+        }
+        <div id="mensaje-asignar" class="small mb-4" role="status"></div>
     }
 
     <h2 class="h5">Comentarios</h2>
@@ -166,6 +179,41 @@
                     })
                     .always(function () {
                         $('#btn-estado').prop('disabled', false);
+                    });
+            });
+
+            // Asignacion del ticket (solo existe el formulario si la sesion es de un Administrador)
+            var $formAsignar = $('#form-asignar');
+            var $selectAsignado = $('#idUsuario');
+            var $mensajeAsignar = $('#mensaje-asignar');
+            var asignadoActual = $selectAsignado.val();
+
+            $formAsignar.on('submit', function (e) {
+                e.preventDefault();
+                $mensajeAsignar.removeClass('text-danger text-success').text('');
+
+                if ($selectAsignado.val() === '') {
+                    $mensajeAsignar.addClass('text-danger').text('Seleccione un administrador.');
+                    return;
+                }
+
+                $('#btn-asignar').prop('disabled', true);
+                $.ajax({ url: $formAsignar.attr('action'), method: 'POST', data: $formAsignar.serialize(), dataType: 'json' })
+                    .done(function (respuesta) {
+                        asignadoActual = $selectAsignado.val();
+                        $('#asignado-ticket').text(respuesta.asignado);
+                        $('#fecha-actualizacion').text(respuesta.fecha);
+                        $mensajeAsignar.addClass('text-success').text(respuesta.cambio
+                            ? 'Ticket asignado a ' + respuesta.asignado + '.'
+                            : 'El ticket ya estaba asignado a ' + respuesta.asignado + '.');
+                    })
+                    .fail(function (xhr) {
+                        var respuesta = xhr.responseJSON;
+                        $selectAsignado.val(asignadoActual);
+                        $mensajeAsignar.addClass('text-danger').text(respuesta && respuesta.error ? respuesta.error : 'No se pudo asignar el ticket. Intente de nuevo.');
+                    })
+                    .always(function () {
+                        $('#btn-asignar').prop('disabled', false);
                     });
             });
         });
