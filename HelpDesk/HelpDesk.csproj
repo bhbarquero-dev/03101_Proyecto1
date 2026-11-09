@@ -129,6 +129,7 @@
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="Controllers\CuentaController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
+    <Compile Include="Controllers\ReportesController.cs" />
     <Compile Include="Controllers\TicketsController.cs" />
     <Compile Include="Datos\HelpDeskContext.cs" />
     <Compile Include="Global.asax.cs">
@@ -139,6 +140,7 @@
     <Compile Include="Models\ComentarioViewModel.cs" />
     <Compile Include="Models\CrearTicketViewModel.cs" />
     <Compile Include="Models\EstadoTicket.cs" />
+    <Compile Include="Models\ReporteViewModel.cs" />
     <Compile Include="Models\LoginViewModel.cs" />
     <Compile Include="Models\Ticket.cs" />
     <Compile Include="Models\Usuario.cs" />
@@ -206,6 +208,7 @@
     <Content Include="Views\Tickets\_BusquedaTickets.cshtml" />
     <Content Include="Views\Tickets\MisTickets.cshtml" />
     <Content Include="Views\Tickets\Todos.cshtml" />
+    <Content Include="Views\Reportes\Index.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
