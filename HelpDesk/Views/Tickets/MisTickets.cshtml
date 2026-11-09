@@ -20,8 +20,9 @@
     }
     else
     {
+        @Html.Partial("_BusquedaTickets")
         <div class="table-responsive">
-            <table class="table table-hover align-middle">
+            <table id="tabla-tickets" class="table table-hover align-middle">
                 <thead class="table-light">
                     <tr>
                         <th scope="col">N.º</th>
@@ -58,6 +59,13 @@
                 </tbody>
             </table>
         </div>
-        <p class="text-muted small">Total: @Model.Count ticket(s).</p>
+        <p class="text-muted small">
+            <span id="total-tickets">Total: @Model.Count ticket(s).</span>
+            <span id="mensaje-busqueda" class="ms-2" role="status"></span>
+        </p>
     }
 </main>
+
+@section scripts {
+    <script src="@Url.Content("~/Scripts/busqueda-tickets.js")"></script>
+}

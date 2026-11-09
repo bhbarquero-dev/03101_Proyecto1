@@ -11,6 +11,7 @@ namespace HelpDesk.Controllers
     public class TicketsController : Controller
     {
         private const string TicketNoEncontrado = "El ticket no existe o no tiene acceso a él.";
+        private const int LargoMaximoBusqueda = 150;
 
         // GET: /Tickets/MisTickets (HU-02)
         public ActionResult MisTickets()
@@ -28,6 +29,7 @@ namespace HelpDesk.Controllers
                     .OrderByDescending(t => t.FechaCreacion)
                     .ToList();
 
+                ViewBag.Estados = ListaEstados(db);
                 return View(tickets);
             }
         }
@@ -46,7 +48,65 @@ namespace HelpDesk.Controllers
                     .OrderByDescending(t => t.FechaCreacion)
                     .ToList();
 
+                ViewBag.Estados = ListaEstados(db);
                 return View(tickets);
+            }
+        }
+
+        // GET: /Tickets/Buscar?texto=...&idEstado=... (AJAX, HU-07)
+        // El texto se compara con el numero, el titulo y el nombre del estado.
+        // Un Usuario solo encuentra sus propios tickets; un Administrador, todos.
+        public ActionResult Buscar(BusquedaTicketsViewModel criterios)
+        {
+            int idEstado = criterios.IdEstado;
+            string texto = (criterios.Texto ?? "").Trim();
+            if (texto.Length > LargoMaximoBusqueda) texto = texto.Substring(0, LargoMaximoBusqueda);
+
+            using (var db = new HelpDeskContext())
+            {
+                var consulta = TicketsVisibles(db).AsNoTracking();
+
+                if (idEstado != 0) consulta = consulta.Where(t => t.IdEstado == idEstado);
+
+                if (texto.Length > 0)
+                {
+                    // Acepta el numero con o sin el prefijo "#"
+                    int numero;
+                    bool esNumero = int.TryParse(texto.TrimStart('#'), out numero);
+                    consulta = consulta.Where(t => (esNumero && t.Id == numero)
+                        || t.Titulo.Contains(texto)
+                        || t.Estado.Nombre.Contains(texto));
+                }
+
+                var tickets = consulta
+                    .OrderByDescending(t => t.FechaCreacion)
+                    .Select(t => new
+                    {
+                        t.Id,
+                        t.Titulo,
+                        Solicitante = t.Solicitante.Nombre,
+                        t.Categoria,
+                        t.IdEstado,
+                        Estado = t.Estado.Nombre,
+                        Asignado = t.Asignado.Nombre,
+                        t.FechaCreacion,
+                        t.FechaActualizacion
+                    })
+                    .ToList()
+                    .Select(t => new
+                    {
+                        id = t.Id,
+                        titulo = t.Titulo,
+                        solicitante = t.Solicitante,
+                        categoria = t.Categoria,
+                        estado = t.Estado,
+                        clase = EstadoTicket.ClaseBadge(t.IdEstado),
+                        asignado = t.Asignado,
+                        creado = FormatoFecha(t.FechaCreacion),
+                        actualizado = FormatoFecha(t.FechaActualizacion)
+                    });
+
+                return Json(new { tickets }, JsonRequestBehavior.AllowGet);
             }
         }
 
@@ -241,6 +301,11 @@ namespace HelpDesk.Controllers
 
             int idUsuario = sesion.Id;
             return db.Tickets.Where(t => t.IdUsuarioSolicitante == idUsuario);
+        }
+
+        private static SelectList ListaEstados(HelpDeskContext db)
+        {
+            return new SelectList(db.EstadosTicket.OrderBy(e => e.Id).ToList(), "Id", "Nombre");
         }
 
         private static IQueryable<Usuario> AdministradoresActivos(HelpDeskContext db)
