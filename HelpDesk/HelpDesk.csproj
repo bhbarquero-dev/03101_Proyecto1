@@ -134,6 +134,7 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="Models\BusquedaTicketsViewModel.cs" />
     <Compile Include="Models\Comentario.cs" />
     <Compile Include="Models\ComentarioViewModel.cs" />
     <Compile Include="Models\CrearTicketViewModel.cs" />
@@ -182,6 +183,7 @@
     <Content Include="Scripts\jquery.validate.min.js" />
     <Content Include="Scripts\jquery.validate.unobtrusive.js" />
     <Content Include="Scripts\jquery.validate.unobtrusive.min.js" />
+    <Content Include="Scripts\busqueda-tickets.js" />
     <Content Include="Scripts\modernizr-2.8.3.js" />
     <Content Include="Web.config" />
     <Content Include="Web.Debug.config">
@@ -201,6 +203,7 @@
     <Content Include="Views\Tickets\Crear.cshtml" />
     <Content Include="Views\Tickets\Detalle.cshtml" />
     <Content Include="Views\Tickets\_EstadoBadge.cshtml" />
+    <Content Include="Views\Tickets\_BusquedaTickets.cshtml" />
     <Content Include="Views\Tickets\MisTickets.cshtml" />
     <Content Include="Views\Tickets\Todos.cshtml" />
   </ItemGroup>
