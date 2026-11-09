@@ -1,0 +1,119 @@
+﻿@model HelpDesk.Models.ReporteViewModel
+@using HelpDesk.Models
+@{
+    ViewBag.Title = "Reportes";
+}
+
+<main class="mt-4">
+    <h1 class="h3 mb-3">Reporte de tickets</h1>
+
+    @using (Html.BeginForm("Index", "Reportes", FormMethod.Get, new { @class = "row g-2 align-items-end mb-3" }))
+    {
+        <div class="col-sm-4 col-md-3">
+            <label for="desde" class="form-label">Desde</label>
+            <input type="date" id="desde" name="desde" class="form-control" value="@Model.Desde.ToString("yyyy-MM-dd")" required />
+        </div>
+        <div class="col-sm-4 col-md-3">
+            <label for="hasta" class="form-label">Hasta</label>
+            <input type="date" id="hasta" name="hasta" class="form-control" value="@Model.Hasta.ToString("yyyy-MM-dd")" required />
+        </div>
+        <div class="col-sm-4 col-md-3">
+            <button type="submit" class="btn btn-primary">Generar reporte</button>
+        </div>
+    }
+
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="alert alert-danger" role="alert">@Html.ValidationSummary(true, null, new { @class = "mb-0" })</div>
+    }
+    else
+    {
+        <p class="text-muted">
+            Tickets creados entre el @Model.Desde.ToString("dd/MM/yyyy") y el @Model.Hasta.ToString("dd/MM/yyyy"), ambos inclusive.
+        </p>
+
+        <div class="row g-3 mb-4">
+            <div class="col-sm-4">
+                <div class="card h-100"><div class="card-body">
+                    <div class="text-muted small">Tickets creados</div>
+                    <div class="fs-3 fw-semibold">@Model.Total</div>
+                </div></div>
+            </div>
+            <div class="col-sm-4">
+                <div class="card h-100"><div class="card-body">
+                    <div class="text-muted small">Resueltos o cerrados</div>
+                    <div class="fs-3 fw-semibold">@Model.Resueltos</div>
+                </div></div>
+            </div>
+            <div class="col-sm-4">
+                <div class="card h-100"><div class="card-body">
+                    <div class="text-muted small">Tiempo promedio de resolución</div>
+                    <div class="fs-3 fw-semibold">@ReporteViewModel.FormatoDuracion(Model.PromedioResolucion)</div>
+                </div></div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <section class="col-lg-5">
+                <h2 class="h5">Por estado</h2>
+                <table class="table align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col">Estado</th>
+                            <th scope="col" class="text-end">Cantidad</th>
+                            <th scope="col" class="text-end">Porcentaje</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var fila in Model.PorEstado)
+                        {
+                            <tr>
+                                <td><span class="badge @EstadoTicket.ClaseBadge(fila.IdEstado)">@fila.Estado</span></td>
+                                <td class="text-end">@fila.Cantidad</td>
+                                <td class="text-end">@Model.Porcentaje(fila.Cantidad)</td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot>
+                        <tr class="fw-semibold">
+                            <td>Total</td>
+                            <td class="text-end">@Model.Total</td>
+                            <td class="text-end">@(Model.Total == 0 ? "0 %" : "100 %")</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </section>
+
+            <section class="col-lg-7">
+                <h2 class="h5">Por mes de creación</h2>
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col">Mes</th>
+                                <th scope="col" class="text-end">Creados</th>
+                                <th scope="col" class="text-end">Resueltos o cerrados</th>
+                                <th scope="col" class="text-end">Tiempo promedio de resolución</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var fila in Model.PorMes)
+                            {
+                                <tr>
+                                    <td>@fila.Periodo</td>
+                                    <td class="text-end">@fila.Creados</td>
+                                    <td class="text-end">@fila.Resueltos</td>
+                                    <td class="text-end">@ReporteViewModel.FormatoDuracion(fila.PromedioResolucion)</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+
+        <p class="text-muted small">
+            El tiempo de resolución se calcula sobre los tickets resueltos o cerrados, como la diferencia entre su fecha de creación y su última actualización.
+        </p>
+    }
+</main>
